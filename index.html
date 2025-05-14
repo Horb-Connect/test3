@@ -4,7 +4,24 @@
   <meta charset="UTF-8" />
   <title>Horb_Connect</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+  </style>
 </head>
 <body>
   <h1>Willkommen bei unserem Start-up Horb_Connect</h1>
@@ -27,39 +44,56 @@
     <li>Produkt 2 – Beschreibung</li>
     <li>Produkt 3 - Test</li>
   </ul>
+
+  <!-- Ereignis-Tabelle -->
+  <h2>Ereignisse</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>📍 Wo</th>
+        <th>📝 Was</th>
+        <th>🕒 Wann</th>
+        <th>➕ Extras</th>
+      </tr>
+    </thead>
+    <tbody id="tabelle">
+      <!-- Supabase-Daten werden hier eingefügt -->
+    </tbody>
+  </table>
+
+  <!-- Supabase-Verbindung + Daten laden -->
   <script>
-  // Supabase-Daten
-  const SUPABASE_URL = 'https://vptflhlzsbvpbfvmflja.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwdGZsaGx6c2J2cGJmdm1mbGphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyMjEyODgsImV4cCI6MjA2Mjc5NzI4OH0.37ryrRnE0fycdVjXiDRml1VM3GGEiJj4a_oH6i3sPUM';
+    const SUPABASE_URL = 'https://vptflhlzsbvpbfvmflja.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwdGZsaGx6c2J2cGJmdm1mbGphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyMjEyODgsImV4cCI6MjA2Mjc5NzI4OH0.37ryrRnE0fycdVjXiDRml1VM3GGEiJj4a_oH6i3sPUM';
 
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // Daten abrufen und anzeigen
-  async function ladeTabelle() {
-    const { data, error } = await supabase
-      .from('ereignisse')
-      .select('*');
+    async function ladeTabelle() {
+      const { data, error } = await supabase
+        .from('ereignisse')
+        .select('*');
 
-    if (error) {
-      console.error('Fehler beim Laden:', error);
-      return;
+      if (error) {
+        console.error('Fehler beim Laden:', error);
+        return;
+      }
+
+      const tabelle = document.getElementById('tabelle');
+      data.forEach(eintrag => {
+        const zeile = document.createElement('tr');
+        zeile.innerHTML = `
+          <td>${eintrag.wo}</td>
+          <td>${eintrag.was}</td>
+          <td>${new Date(eintrag.wann).toLocaleString()}</td>
+          <td>${eintrag.extras || ''}</td>
+        `;
+        tabelle.appendChild(zeile);
+      });
     }
 
-    const tabelle = document.getElementById('tabelle');
-    data.forEach(eintrag => {
-      const zeile = document.createElement('tr');
-      zeile.innerHTML = `
-        <td>${eintrag.wo}</td>
-        <td>${eintrag.was}</td>
-        <td>${new Date(eintrag.wann).toLocaleString()}</td>
-        <td>${eintrag.extras || ''}</td>
-      `;
-      tabelle.appendChild(zeile);
-    });
-  }
-
-  ladeTabelle();
-</script>
+    ladeTabelle();
+  </script>
 
 </body>
 </html>
+
