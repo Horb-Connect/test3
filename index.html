@@ -8,73 +8,36 @@
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
-      transition: background-color 0.3s, color 0.3s;
     }
-
-    .dark-mode {
-      background-color: #121212;
-      color: white;
-    }
-
     table {
-      width: 100%;
       border-collapse: collapse;
+      width: 100%;
       margin-top: 20px;
     }
-
     th, td {
       padding: 10px;
       border: 1px solid #ccc;
     }
-
     th {
       background-color: #f0f0f0;
     }
-
-    .dark-mode th {
-      background-color: #333;
-    }
-
-    #notification {
-      margin-top: 15px;
-      padding: 10px;
-      border-radius: 5px;
-      display: none;
-    }
-
-    .success {
-      background-color: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-
-    .error {
-      background-color: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-
-    form {
-      margin-top: 30px;
-    }
-
-    input, textarea, button {
-      display: block;
-      margin: 10px 0;
-      padding: 8px;
-      width: 100%;
-      max-width: 400px;
-    }
-
   </style>
 </head>
 <body>
+  <h1>Willkommen bei unserem Start-up Horb_Connect</h1>
 
-  <!-- Dark-/Light-Mode -->
-  <button onclick="toggleMode()">🌗 Dark/Light Mode</button>
+  <!-- Dark/Light Mode Umschalter -->
+  <button onclick="toggleMode()">Toggle Dark Mode</button>
 
-  <!-- Hinweisbereich -->
-  <div id="notification"></div>
+  <!-- Formular für das Hinzufügen von Ereignissen -->
+  <h2>Ereignis hinzufügen</h2>
+  <form id="ereignisForm" onsubmit="event.preventDefault(); ereignisEintragen();">
+    <input type="text" id="wo" placeholder="Wo findet das Ereignis statt?" required><br>
+    <input type="text" id="was" placeholder="Was ist das Ereignis?" required><br>
+    <input type="datetime-local" id="wann" required><br>
+    <input type="text" id="extras" placeholder="Extras (optional)"><br>
+    <button type="submit">Ereignis hinzufügen</button>
+  </form>
 
   <!-- Ereignis-Tabelle -->
   <h2>Ereignisse</h2>
@@ -87,80 +50,71 @@
         <th>➕ Extras</th>
       </tr>
     </thead>
-    <tbody id="tabelle"></tbody>
+    <tbody id="tabelle">
+      <!-- Hier werden die Ereignisse angezeigt -->
+    </tbody>
   </table>
-
-  <!-- Formular zum Hinzufügen -->
-  <h3>Neues Ereignis hinzufügen</h3>
-  <form id="ereignisForm">
-    <input type="text" id="wo" placeholder="Ort (wo)" required />
-    <input type="text" id="was" placeholder="Was passiert?" required />
-    <input type="datetime-local" id="wann" required />
-    <textarea id="extras" placeholder="Extras (optional)"></textarea>
-    <button type="submit">➕ Hinzufügen</button>
-  </form>
 
   <script>
     const SUPABASE_URL = 'https://vptflhlzsbvpbfvmflja.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwdGZsaGx6c2J2cGJmdm1mbGphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyMjEyODgsImV4cCI6MjA2Mjc5NzI4OH0.37ryrRnE0fycdVjXiDRml1VM3GGEiJj4a_oH6i3sPUM';
+    const SUPABASE_ANON_KEY = 'dein_anon_key';
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    function toggleMode() {
-      document.body.classList.toggle("dark-mode");
-    }
+    // Ereignis hinzufügen
+    async function ereignisEintragen() {
+      const wo = document.getElementById('wo').value;
+      const was = document.getElementById('was').value;
+      const wann = new Date(document.getElementById('wann').value).toISOString();
+      const extras = document.getElementById('extras').value;
 
-    function showNotification(message, type = "success") {
-      const note = document.getElementById("notification");
-      note.textContent = message;
-      note.className = type;
-      note.style.display = "block";
-      setTimeout(() => note.style.display = "none", 4000);
-    }
-
-    async function ladeTabelle() {
-      const { data, error } = await supabase.from("ereignisse").select("*").order("wann", { ascending: true });
+      // Einfügeversuch in die Supabase-Datenbank
+      const { data, error } = await supabase
+        .from('ereignisse')
+        .insert([{ wo, was, wann, extras }]);
 
       if (error) {
-        showNotification("❌ Fehler beim Laden: " + error.message, "error");
+        console.error('Fehler beim Einfügen:', error.message);
+        alert('Es gab einen Fehler beim Speichern des Ereignisses.');
+      } else {
+        console.log('Erfolgreich eingefügt:', data);
+        alert('Ereignis wurde erfolgreich gespeichert.');
+        ladeTabelle();  // Tabelle neu laden
+      }
+    }
+
+    // Tabelle laden
+    async function ladeTabelle() {
+      const { data, error } = await supabase
+        .from('ereignisse')
+        .select('*');
+
+      if (error) {
+        console.error('Fehler beim Laden:', error);
         return;
       }
 
-      const tbody = document.getElementById("tabelle");
-      tbody.innerHTML = "";
-
-      data.forEach(e => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${e.wo}</td>
-          <td>${e.was}</td>
-          <td>${new Date(e.wann).toLocaleString()}</td>
-          <td>${e.extras || ""}</td>
+      const tabelle = document.getElementById('tabelle');
+      tabelle.innerHTML = '';  // Tabelle leeren
+      data.forEach(eintrag => {
+        const zeile = document.createElement('tr');
+        zeile.innerHTML = `
+          <td>${eintrag.wo}</td>
+          <td>${eintrag.was}</td>
+          <td>${new Date(eintrag.wann).toLocaleString()}</td>
+          <td>${eintrag.extras || ''}</td>
         `;
-        tbody.appendChild(row);
+        tabelle.appendChild(zeile);
       });
     }
 
-    document.getElementById("ereignisForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const wo = document.getElementById("wo").value;
-      const was = document.getElementById("was").value;
-      const wann = document.getElementById("wann").value;
-      const extras = document.getElementById("extras").value;
+    // Dark/Light Mode
+    function toggleMode() {
+      const body = document.body;
+      body.classList.toggle('dark-mode');
+    }
 
-      const { error } = await supabase.from("ereignisse").insert([{ wo, was, wann, extras }]);
-
-      if (error) {
-        showNotification("❌ Fehler beim Speichern: " + error.message, "error");
-        return;
-      }
-
-      showNotification("✅ Ereignis erfolgreich gespeichert!", "success");
-      e.target.reset();
-      ladeTabelle();
-    });
-
+    // Initiale Tabellenanzeige
     ladeTabelle();
   </script>
-
 </body>
 </html>
