@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <title>Horb_Connect</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 </head>
 <body>
   <h1>Willkommen bei unserem Start-up Horb_Connect</h1>
@@ -25,5 +27,39 @@
     <li>Produkt 2 – Beschreibung</li>
     <li>Produkt 3 - Test</li>
   </ul>
+  <script>
+  // Supabase-Daten
+  const SUPABASE_URL = 'https://vptflhlzsbvpbfvmflja.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwdGZsaGx6c2J2cGJmdm1mbGphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyMjEyODgsImV4cCI6MjA2Mjc5NzI4OH0.37ryrRnE0fycdVjXiDRml1VM3GGEiJj4a_oH6i3sPUM';
+
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Daten abrufen und anzeigen
+  async function ladeTabelle() {
+    const { data, error } = await supabase
+      .from('ereignisse')
+      .select('*');
+
+    if (error) {
+      console.error('Fehler beim Laden:', error);
+      return;
+    }
+
+    const tabelle = document.getElementById('tabelle');
+    data.forEach(eintrag => {
+      const zeile = document.createElement('tr');
+      zeile.innerHTML = `
+        <td>${eintrag.wo}</td>
+        <td>${eintrag.was}</td>
+        <td>${new Date(eintrag.wann).toLocaleString()}</td>
+        <td>${eintrag.extras || ''}</td>
+      `;
+      tabelle.appendChild(zeile);
+    });
+  }
+
+  ladeTabelle();
+</script>
+
 </body>
 </html>
