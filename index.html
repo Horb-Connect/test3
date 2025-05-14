@@ -8,8 +8,12 @@
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
-      background-color: #fff;
-      color: #000;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .dark-mode {
+      background-color: #121212;
+      color: #ffffff;
     }
 
     table {
@@ -25,6 +29,10 @@
 
     th {
       background-color: #f0f0f0;
+    }
+
+    .dark-mode th {
+      background-color: #333;
     }
 
     #notification {
@@ -49,13 +57,17 @@
     #event-form {
       display: none;
     }
+
+    .toggle-button {
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 <body>
-  <h1>Willkommen bei unserem Start-up Horb_Connect</h1>
+  <h1>Willkommen bei Horb_Connect</h1>
 
-  <!-- Logo -->
-  <img src="C:\Users\silas\Downloads\Projekt Infos.jpeg" alt="Logo" width="200">
+  <!-- Dark-/Light-Mode-Umschalter -->
+  <button class="toggle-button" onclick="toggleMode()">🌓 Dark/Light Mode</button>
 
   <!-- Login-Formular -->
   <h2>Login</h2>
@@ -68,7 +80,7 @@
   <!-- Benachrichtigung -->
   <div id="notification"></div>
 
-  <!-- Ereignis-Tabelle (sichtbar nach Login) -->
+  <!-- Ereignistabelle (erst sichtbar nach Login) -->
   <div id="event-form">
     <h2>Ereignisse</h2>
     <table>
@@ -80,17 +92,14 @@
           <th>➕ Extras</th>
         </tr>
       </thead>
-      <tbody id="tabelle">
-        <!-- Supabase-Daten werden hier eingefügt -->
-      </tbody>
+      <tbody id="tabelle"></tbody>
     </table>
   </div>
 
-  <!-- Supabase + Login-Logik -->
+  <!-- Supabase + Login-Logik + DarkMode -->
   <script>
     const SUPABASE_URL = 'https://vptflhlzsbvpbfvmflja.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwdGZsaGx6c2J2cGJmdm1mbGphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyMjEyODgsImV4cCI6MjA2Mjc5NzI4OH0.37ryrRnE0fycdVjXiDRml1VM3GGEiJj4a_oH6i3sPUM';
-
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // ggf. gekürzt
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     function showNotification(message, type = "success") {
@@ -98,6 +107,11 @@
       note.innerText = message;
       note.className = type;
       note.style.display = "block";
+    }
+
+    // Dark/Light Mode
+    function toggleMode() {
+      document.body.classList.toggle("dark-mode");
     }
 
     document.getElementById("login-form").addEventListener("submit", async (e) => {
@@ -129,11 +143,12 @@
 
       if (error) {
         console.error('Fehler beim Laden:', error);
+        showNotification("❌ Fehler beim Laden der Tabelle", "error");
         return;
       }
 
       const tabelle = document.getElementById('tabelle');
-      tabelle.innerHTML = ''; // Leeren vor dem Neuladen
+      tabelle.innerHTML = '';
 
       data.forEach(eintrag => {
         const zeile = document.createElement('tr');
