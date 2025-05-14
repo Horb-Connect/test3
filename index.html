@@ -5,242 +5,132 @@
   <title>Horb_Connect</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    /* Allgemeine Stile */
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
       transition: background-color 0.3s, color 0.3s;
     }
 
-    /* White Mode (Standard) */
-    body.white-mode {
-      background-color: #fff;
-      color: #000;
+    body.light {
+      background-color: white;
+      color: black;
     }
 
-    /* Dark Mode */
-    body.dark-mode {
+    body.dark {
       background-color: #121212;
-      color: #fff;
-    }
-
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      margin-top: 20px;
-    }
-
-    th, td {
-      padding: 10px;
-      border: 1px solid #ccc;
-    }
-
-    th {
-      background-color: #f0f0f0;
-    }
-
-    /* Dark mode spezifische Stile für Tabelle */
-    body.dark-mode table th {
-      background-color: #333;
-      color: #fff;
-    }
-
-    body.dark-mode table td {
-      background-color: #222;
-    }
-
-    /* Toggle Button für Dark/Light Mode */
-    #toggle-button {
-      background-color: #007bff;
       color: white;
-      padding: 10px 20px;
-      border: none;
-      cursor: pointer;
-      border-radius: 5px;
-      position: absolute;
-      top: 20px;
-      right: 20px;
     }
 
-    #toggle-button:hover {
-      background-color: #0056b3;
+    button {
+      padding: 10px;
+      margin: 10px 0;
+    }
+
+    table, th, td {
+      border: 1px solid gray;
+      border-collapse: collapse;
+      padding: 8px;
+    }
+
+    #event-form {
+      display: none;
     }
   </style>
 </head>
-<body class="white-mode">
-  <button id="toggle-button">🌙 Dunkelmodus</button>
+<body class="light">
+  <h1>Horb_Connect</h1>
 
-  <h1>Willkommen bei unserem Start-up Horb_Connect</h1>
+  <button onclick="toggleMode()">🌓 Modus wechseln</button>
 
-  <!-- Logo -->
-  <img src="C:\Users\silas\Downloads\Projekt Infos.jpeg" alt="Logo" width="200">
-
-  <!-- Login-Formular -->
   <h2>Login</h2>
-  <form id="loginForm">
+  <form id="login-form">
     <input type="email" id="email" placeholder="E-Mail" required><br>
     <input type="password" id="password" placeholder="Passwort" required><br>
     <button type="submit">Einloggen</button>
   </form>
 
-  <!-- Produktinformationen -->
-  <h2>Produkte</h2>
-  <ul>
-    <li>Produkt 1 – Beschreibung</li>
-    <li>Produkt 2 – Beschreibung</li>
-    <li>Produkt 3 - Test</li>
-  </ul>
+  <div id="event-form">
+    <h2>Neues Ereignis</h2>
+    <input type="text" id="wo" placeholder="Ort"><br>
+    <input type="text" id="was" placeholder="Was"><br>
+    <input type="datetime-local" id="wann"><br>
+    <input type="text" id="extras" placeholder="Extras"><br>
+    <button onclick="addEvent()">Ereignis hinzufügen</button>
+  </div>
 
-  <!-- Neues Ereignis Formular -->
-  <h3>Neues Ereignis hinzufügen</h3>
-  <form id="addEventForm" style="display:none;">
-    <input type="text" id="wo" placeholder="Wo?" required><br>
-    <input type="text" id="was" placeholder="Was?" required><br>
-    <input type="datetime-local" id="wann" required><br>
-    <input type="text" id="extras" placeholder="Extras (optional)"><br>
-    <button type="submit">Hinzufügen</button>
-  </form>
-
-  <!-- Ereignis-Tabelle -->
   <h2>Ereignisse</h2>
   <table>
     <thead>
-      <tr>
-        <th>📍 Wo</th>
-        <th>📝 Was</th>
-        <th>🕒 Wann</th>
-        <th>➕ Extras</th>
-        <th>Bearbeiten</th>
-        <th>Löschen</th>
-      </tr>
+      <tr><th>Wo</th><th>Was</th><th>Wann</th><th>Extras</th></tr>
     </thead>
-    <tbody id="tabelle">
-      <!-- Supabase-Daten werden hier eingefügt -->
+    <tbody id="events-table">
     </tbody>
   </table>
 
-  <!-- Supabase-Verbindung + Daten laden -->
   <script>
     const SUPABASE_URL = 'https://vptflhlzsbvpbfvmflja.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwdGZsaGx6c2J2cGJmdm1mbGphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyMjEyODgsImV4cCI6MjA2Mjc5NzI4OH0.37ryrRnE0fycdVjXiDRml1VM3GGEiJj4a_oH6i3sPUM';
+    const SUPABASE_ANON_KEY = 'ey...PUM'; // Gekürzt für Übersicht
 
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Toggle zwischen Dark Mode und White Mode
-    document.getElementById('toggle-button').addEventListener('click', () => {
-      const body = document.body;
-      const currentMode = body.classList.contains('dark-mode') ? 'dark' : 'light';
+    function toggleMode() {
+      document.body.classList.toggle("dark");
+      document.body.classList.toggle("light");
+    }
 
-      if (currentMode === 'dark') {
-        body.classList.remove('dark-mode');
-        body.classList.add('white-mode');
-        document.getElementById('toggle-button').textContent = '🌙 Dunkelmodus';
-      } else {
-        body.classList.remove('white-mode');
-        body.classList.add('dark-mode');
-        document.getElementById('toggle-button').textContent = '🌞 Hellenmodus';
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        alert("Fehler bei Anmeldung: " + error.message);
+        return;
       }
+
+      document.getElementById('event-form').style.display = 'block';
+      document.getElementById('login-form').style.display = 'none';
+      loadEvents();
     });
 
-    // Anmeldung
-    async function anmelden(event) {
-      event.preventDefault();
-      const email = document.getElementById('email').value;
-      const passwort = document.getElementById('password').value;
-
-      const { user, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: passwort,
-      });
+    async function loadEvents() {
+      const { data, error } = await supabase.from('ereignisse').select('*');
+      const table = document.getElementById('events-table');
+      table.innerHTML = '';
 
       if (error) {
-        alert('Fehler bei der Anmeldung: ' + error.message);
+        alert("Fehler beim Laden: " + error.message);
         return;
       }
 
-      alert('Erfolgreich eingeloggt!');
-      document.getElementById('loginForm').style.display = 'none';  // Verstecke das Login-Formular
-      document.getElementById('addEventForm').style.display = 'block'; // Zeige das Formular für neue Ereignisse
-      ladeTabelle();  // Lade die Tabelle nach dem erfolgreichen Login
-    }
-
-    document.getElementById('loginForm').addEventListener('submit', anmelden);
-
-    // Ereignisse laden
-    async function ladeTabelle() {
-      const { data, error } = await supabase
-        .from('ereignisse')
-        .select('*');
-
-      if (error) {
-        console.error('Fehler beim Laden:', error);
-        return;
-      }
-
-      const tabelle = document.getElementById('tabelle');
-      tabelle.innerHTML = '';  // Tabelle zurücksetzen
-
-      data.forEach(eintrag => {
-        const zeile = document.createElement('tr');
-        zeile.innerHTML = `
-          <td>${eintrag.wo}</td>
-          <td>${eintrag.was}</td>
-          <td>${new Date(eintrag.wann).toLocaleString()}</td>
-          <td>${eintrag.extras || ''}</td>
-          <td><button onclick="bearbeiteEreignis(${eintrag.id})">Bearbeiten</button></td>
-          <td><button onclick="loescheEreignis(${eintrag.id})">Löschen</button></td>
-        `;
-        tabelle.appendChild(zeile);
+      data.forEach(e => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${e.wo}</td>
+          <td>${e.was}</td>
+          <td>${new Date(e.wann).toLocaleString()}</td>
+          <td>${e.extras || ''}</td>`;
+        table.appendChild(row);
       });
     }
 
-    // Neues Ereignis hinzufügen
-    document.getElementById('addEventForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-
+    async function addEvent() {
       const wo = document.getElementById('wo').value;
       const was = document.getElementById('was').value;
-      const wann = new Date(document.getElementById('wann').value).toISOString();
+      const wann = document.getElementById('wann').value;
       const extras = document.getElementById('extras').value;
 
-      const { data, error } = await supabase
-        .from('ereignisse')
-        .insert([
-          { wo, was, wann, extras }
-        ]);
-
+      const { error } = await supabase.from('ereignisse').insert([{ wo, was, wann, extras }]);
       if (error) {
-        alert('Fehler beim Hinzufügen: ' + error.message);
+        alert("Fehler beim Einfügen: " + error.message);
         return;
       }
 
-      alert('Ereignis erfolgreich hinzugefügt!');
-      ladeTabelle(); // Tabelle nach dem Hinzufügen aktualisieren
-    });
-
-    // Ereignis löschen
-    async function loescheEreignis(id) {
-      const { data, error } = await supabase
-        .from('ereignisse')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        alert('Fehler beim Löschen: ' + error.message);
-        return;
-      }
-
-      alert('Ereignis erfolgreich gelöscht!');
-      ladeTabelle(); // Tabelle nach dem Löschen aktualisieren
-    }
-
-    // Ereignis bearbeiten (Platzhalter)
-    async function bearbeiteEreignis(id) {
-      alert('Bearbeiten von Ereignis ID ' + id);
-      // Hier kannst du ein Bearbeitungsformular einfügen oder direkt den Datensatz bearbeiten
+      loadEvents();
     }
   </script>
-
 </body>
 </html>
 
