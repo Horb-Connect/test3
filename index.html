@@ -31,9 +31,9 @@
 
   <!-- Login-Formular -->
   <h2>Login</h2>
-  <form>
-    <input type="email" placeholder="E-Mail" required><br>
-    <input type="password" placeholder="Passwort" required><br>
+  <form id="loginForm">
+    <input type="email" id="email" placeholder="E-Mail" required><br>
+    <input type="password" id="password" placeholder="Passwort" required><br>
     <button type="submit">Einloggen</button>
   </form>
 
@@ -45,6 +45,16 @@
     <li>Produkt 3 - Test</li>
   </ul>
 
+  <!-- Neues Ereignis Formular -->
+  <h3>Neues Ereignis hinzufügen</h3>
+  <form id="addEventForm" style="display:none;">
+    <input type="text" id="wo" placeholder="Wo?" required><br>
+    <input type="text" id="was" placeholder="Was?" required><br>
+    <input type="datetime-local" id="wann" required><br>
+    <input type="text" id="extras" placeholder="Extras (optional)"><br>
+    <button type="submit">Hinzufügen</button>
+  </form>
+
   <!-- Ereignis-Tabelle -->
   <h2>Ereignisse</h2>
   <table>
@@ -54,6 +64,8 @@
         <th>📝 Was</th>
         <th>🕒 Wann</th>
         <th>➕ Extras</th>
+        <th>Bearbeiten</th>
+        <th>Löschen</th>
       </tr>
     </thead>
     <tbody id="tabelle">
@@ -68,6 +80,31 @@
 
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // Anmeldung
+    async function anmelden(event) {
+      event.preventDefault();
+      const email = document.getElementById('email').value;
+      const passwort = document.getElementById('password').value;
+
+      const { user, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: passwort,
+      });
+
+      if (error) {
+        alert('Fehler bei der Anmeldung: ' + error.message);
+        return;
+      }
+
+      alert('Erfolgreich eingeloggt!');
+      document.getElementById('loginForm').style.display = 'none';  // Verstecke das Login-Formular
+      document.getElementById('addEventForm').style.display = 'block'; // Zeige das Formular für neue Ereignisse
+      ladeTabelle();  // Lade die Tabelle nach dem erfolgreichen Login
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', anmelden);
+
+    // Ereignisse laden
     async function ladeTabelle() {
       const { data, error } = await supabase
         .from('ereignisse')
@@ -79,6 +116,8 @@
       }
 
       const tabelle = document.getElementById('tabelle');
+      tabelle.innerHTML = '';  // Tabelle zurücksetzen
+
       data.forEach(eintrag => {
         const zeile = document.createElement('tr');
         zeile.innerHTML = `
@@ -86,14 +125,59 @@
           <td>${eintrag.was}</td>
           <td>${new Date(eintrag.wann).toLocaleString()}</td>
           <td>${eintrag.extras || ''}</td>
+          <td><button onclick="bearbeiteEreignis(${eintrag.id})">Bearbeiten</button></td>
+          <td><button onclick="loescheEreignis(${eintrag.id})">Löschen</button></td>
         `;
         tabelle.appendChild(zeile);
       });
     }
 
-    ladeTabelle();
+    // Neues Ereignis hinzufügen
+    document.getElementById('addEventForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const wo = document.getElementById('wo').value;
+      const was = document.getElementById('was').value;
+      const wann = new Date(document.getElementById('wann').value).toISOString();
+      const extras = document.getElementById('extras').value;
+
+      const { data, error } = await supabase
+        .from('ereignisse')
+        .insert([
+          { wo, was, wann, extras }
+        ]);
+
+      if (error) {
+        alert('Fehler beim Hinzufügen: ' + error.message);
+        return;
+      }
+
+      alert('Ereignis erfolgreich hinzugefügt!');
+      ladeTabelle(); // Tabelle nach dem Hinzufügen aktualisieren
+    });
+
+    // Ereignis löschen
+    async function loescheEreignis(id) {
+      const { data, error } = await supabase
+        .from('ereignisse')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        alert('Fehler beim Löschen: ' + error.message);
+        return;
+      }
+
+      alert('Ereignis erfolgreich gelöscht!');
+      ladeTabelle(); // Tabelle nach dem Löschen aktualisieren
+    }
+
+    // Ereignis bearbeiten (Platzhalter)
+    async function bearbeiteEreignis(id) {
+      alert('Bearbeiten von Ereignis ID ' + id);
+      // Hier kannst du ein Bearbeitungsformular einfügen oder direkt den Datensatz bearbeiten
+    }
   </script>
 
 </body>
 </html>
-
