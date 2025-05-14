@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>Horb_Connect</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -56,11 +57,11 @@
   <h1>Willkommen bei Horb_Connect</h1>
 
   <!-- Dark/Light Mode Umschalter -->
-  <button class="mode-toggle" onclick="toggleMode()">Toggle Dark Mode</button>
+  <button class="mode-toggle" onclick="toggleMode()">Dark Mode umschalten</button>
 
   <!-- Formular für das Hinzufügen von Ereignissen -->
   <h2>Ereignis hinzufügen</h2>
-  <form id="ereignisForm" onsubmit="event.preventDefault(); ereignisEintragen();">
+  <form id="ereignisForm" onsubmit="event.preventDefault(); ereignisEintragen(event);">
     <div class="input-group">
       <input type="text" id="wo" placeholder="Wo findet das Ereignis statt?" required>
     </div>
@@ -93,23 +94,20 @@
   </table>
 
   <script>
-    // Supabase URL und Anonymer Schlüssel
-    const SUPABASE_URL = 'https://vptflhlzsbvpbfvmflja.supabase.co'; // Ersetze mit deiner URL
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwdGZsaGx6c2J2cGJmdm1mbGphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyMjEyODgsImV4cCI6MjA2Mjc5NzI4OH0.37ryrRnE0fycdVjXiDRml1VM3GGEiJj4a_oH6i3sPUM'; // Ersetze mit deinem API-Schlüssel
+    // Supabase-Client initialisieren
+    const SUPABASE_URL = 'https://vptflhlzsbvpbfvmflja.supabase.co'; // Deine Supabase URL hier
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwdGZsaGx6c2J2cGJmdm1mbGphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyMjEyODgsImV4cCI6MjA2Mjc5NzI4OH0.37ryrRnE0fycdVjXiDRml1VM3GGEiJj4a_oH6i3sPUM'; // Dein Supabase Anonymen Schlüssel hier
 
-    // Initialisiere Supabase-Client
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // Ereignis hinzufügen
-    async function ereignisEintragen() {
+    async function ereignisEintragen(event) {
       const wo = document.getElementById('wo').value;
       const was = document.getElementById('was').value;
       const wann = new Date(document.getElementById('wann').value).toISOString();
       const extras = document.getElementById('extras').value;
 
-      console.log('Ereignis-Daten:', { wo, was, wann, extras });
-
-      // Einfügeversuch in die Supabase-Datenbank
+      // Daten in Supabase einfügen
       const { data, error } = await supabase
         .from('ereignisse')
         .insert([{ wo, was, wann, extras }]);
@@ -120,14 +118,12 @@
       } else {
         console.log('Erfolgreich eingefügt:', data);
         alert('Ereignis wurde erfolgreich gespeichert.');
-        ladeTabelle();  // Tabelle neu laden
+        ladeTabelle();  // Tabelle nach dem Hinzufügen neu laden
       }
     }
 
     // Tabelle laden
     async function ladeTabelle() {
-      console.log('Lade Ereignisse...');
-
       const { data, error } = await supabase
         .from('ereignisse')
         .select('*');
@@ -137,10 +133,8 @@
         return;
       }
 
-      console.log('Ereignisse geladen:', data);
-
       const tabelle = document.getElementById('tabelle');
-      tabelle.innerHTML = '';  // Tabelle leeren
+      tabelle.innerHTML = '';  // Tabelle zuerst leeren
       data.forEach(eintrag => {
         const zeile = document.createElement('tr');
         zeile.innerHTML = `
@@ -158,8 +152,10 @@
       document.body.classList.toggle('dark-mode');
     }
 
-    // Initiale Tabellenanzeige
-    ladeTabelle();
+    // Initiale Laden der Ereignisse
+    window.onload = function() {
+      ladeTabelle();
+    }
   </script>
 </body>
 </html>
