@@ -8,39 +8,30 @@
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
-      transition: background-color 0.3s, color 0.3s;
+      background-color: #fff;
+      color: #000;
     }
 
-    body.light {
-      background-color: white;
-      color: black;
-    }
-
-    body.dark {
-      background-color: #121212;
-      color: white;
-    }
-
-    button {
-      padding: 10px;
-      margin: 10px 0;
-    }
-
-    table, th, td {
-      border: 1px solid gray;
+    table {
       border-collapse: collapse;
-      padding: 8px;
+      width: 100%;
+      margin-top: 20px;
     }
 
-    #event-form {
-      display: none;
+    th, td {
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+
+    th {
+      background-color: #f0f0f0;
     }
 
     #notification {
-      margin-top: 10px;
+      display: none;
+      margin-top: 15px;
       padding: 10px;
       border-radius: 5px;
-      display: none;
     }
 
     .success {
@@ -54,13 +45,19 @@
       color: #721c24;
       border: 1px solid #f5c6cb;
     }
+
+    #event-form {
+      display: none;
+    }
   </style>
 </head>
-<body class="light">
-  <h1>Horb_Connect</h1>
+<body>
+  <h1>Willkommen bei unserem Start-up Horb_Connect</h1>
 
-  <button onclick="toggleMode()">🌓 Modus wechseln</button>
+  <!-- Logo -->
+  <img src="C:\Users\silas\Downloads\Projekt Infos.jpeg" alt="Logo" width="200">
 
+  <!-- Login-Formular -->
   <h2>Login</h2>
   <form id="login-form">
     <input type="email" id="email" placeholder="E-Mail" required><br>
@@ -68,36 +65,33 @@
     <button type="submit">Einloggen</button>
   </form>
 
+  <!-- Benachrichtigung -->
   <div id="notification"></div>
 
+  <!-- Ereignis-Tabelle (sichtbar nach Login) -->
   <div id="event-form">
-    <h2>Neues Ereignis</h2>
-    <input type="text" id="wo" placeholder="Ort"><br>
-    <input type="text" id="was" placeholder="Was"><br>
-    <input type="datetime-local" id="wann"><br>
-    <input type="text" id="extras" placeholder="Extras"><br>
-    <button onclick="addEvent()">Ereignis hinzufügen</button>
+    <h2>Ereignisse</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>📍 Wo</th>
+          <th>📝 Was</th>
+          <th>🕒 Wann</th>
+          <th>➕ Extras</th>
+        </tr>
+      </thead>
+      <tbody id="tabelle">
+        <!-- Supabase-Daten werden hier eingefügt -->
+      </tbody>
+    </table>
   </div>
 
-  <h2>Ereignisse</h2>
-  <table>
-    <thead>
-      <tr><th>Wo</th><th>Was</th><th>Wann</th><th>Extras</th></tr>
-    </thead>
-    <tbody id="events-table">
-    </tbody>
-  </table>
-
+  <!-- Supabase + Login-Logik -->
   <script>
     const SUPABASE_URL = 'https://vptflhlzsbvpbfvmflja.supabase.co';
-    const SUPABASE_ANON_KEY = 'ey...PUM'; // Gekürzt für Übersicht
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwdGZsaGx6c2J2cGJmdm1mbGphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyMjEyODgsImV4cCI6MjA2Mjc5NzI4OH0.37ryrRnE0fycdVjXiDRml1VM3GGEiJj4a_oH6i3sPUM';
 
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    function toggleMode() {
-      document.body.classList.toggle("dark");
-      document.body.classList.toggle("light");
-    }
 
     function showNotification(message, type = "success") {
       const note = document.getElementById("notification");
@@ -106,12 +100,15 @@
       note.style.display = "block";
     }
 
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
+    document.getElementById("login-form").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
 
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
       if (error) {
         showNotification("❌ Anmeldung fehlgeschlagen: " + error.message, "error");
@@ -119,46 +116,35 @@
       }
 
       showNotification("✅ Erfolgreich angemeldet!", "success");
-      document.getElementById('event-form').style.display = 'block';
-      document.getElementById('login-form').style.display = 'none';
-      loadEvents();
+      alert("Erfolgreich angemeldet!");
+
+      document.getElementById("event-form").style.display = "block";
+      document.getElementById("login-form").style.display = "none";
+
+      ladeTabelle();
     });
 
-    async function loadEvents() {
+    async function ladeTabelle() {
       const { data, error } = await supabase.from('ereignisse').select('*');
-      const table = document.getElementById('events-table');
-      table.innerHTML = '';
 
       if (error) {
-        showNotification("❌ Fehler beim Laden: " + error.message, "error");
+        console.error('Fehler beim Laden:', error);
         return;
       }
 
-      data.forEach(e => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${e.wo}</td>
-          <td>${e.was}</td>
-          <td>${new Date(e.wann).toLocaleString()}</td>
-          <td>${e.extras || ''}</td>`;
-        table.appendChild(row);
+      const tabelle = document.getElementById('tabelle');
+      tabelle.innerHTML = ''; // Leeren vor dem Neuladen
+
+      data.forEach(eintrag => {
+        const zeile = document.createElement('tr');
+        zeile.innerHTML = `
+          <td>${eintrag.wo}</td>
+          <td>${eintrag.was}</td>
+          <td>${new Date(eintrag.wann).toLocaleString()}</td>
+          <td>${eintrag.extras || ''}</td>
+        `;
+        tabelle.appendChild(zeile);
       });
-    }
-
-    async function addEvent() {
-      const wo = document.getElementById('wo').value;
-      const was = document.getElementById('was').value;
-      const wann = document.getElementById('wann').value;
-      const extras = document.getElementById('extras').value;
-
-      const { error } = await supabase.from('ereignisse').insert([{ wo, was, wann, extras }]);
-      if (error) {
-        showNotification("❌ Fehler beim Einfügen: " + error.message, "error");
-        return;
-      }
-
-      showNotification("✅ Ereignis erfolgreich hinzugefügt!", "success");
-      loadEvents();
     }
   </script>
 </body>
