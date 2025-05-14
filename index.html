@@ -53,6 +53,19 @@
       color: #721c24;
       border: 1px solid #f5c6cb;
     }
+
+    form {
+      margin-top: 30px;
+    }
+
+    input, textarea, button {
+      display: block;
+      margin: 10px 0;
+      padding: 8px;
+      width: 100%;
+      max-width: 400px;
+    }
+
   </style>
 </head>
 <body>
@@ -77,28 +90,35 @@
     <tbody id="tabelle"></tbody>
   </table>
 
+  <!-- Formular zum Hinzufügen -->
+  <h3>Neues Ereignis hinzufügen</h3>
+  <form id="ereignisForm">
+    <input type="text" id="wo" placeholder="Ort (wo)" required />
+    <input type="text" id="was" placeholder="Was passiert?" required />
+    <input type="datetime-local" id="wann" required />
+    <textarea id="extras" placeholder="Extras (optional)"></textarea>
+    <button type="submit">➕ Hinzufügen</button>
+  </form>
+
   <script>
-    // Supabase-Zugang
     const SUPABASE_URL = 'https://vptflhlzsbvpbfvmflja.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwdGZsaGx6c2J2cGJmdm1mbGphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyMjEyODgsImV4cCI6MjA2Mjc5NzI4OH0.37ryrRnE0fycdVjXiDRml1VM3GGEiJj4a_oH6i3sPUM';
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Dark-/Light-Mode Umschalter
     function toggleMode() {
       document.body.classList.toggle("dark-mode");
     }
 
-    // Hinweis anzeigen
     function showNotification(message, type = "success") {
       const note = document.getElementById("notification");
       note.textContent = message;
       note.className = type;
       note.style.display = "block";
+      setTimeout(() => note.style.display = "none", 4000);
     }
 
-    // Daten laden
     async function ladeTabelle() {
-      const { data, error } = await supabase.from("ereignisse").select("*");
+      const { data, error } = await supabase.from("ereignisse").select("*").order("wann", { ascending: true });
 
       if (error) {
         showNotification("❌ Fehler beim Laden: " + error.message, "error");
@@ -120,7 +140,25 @@
       });
     }
 
-    // Beim Laden der Seite direkt Tabelle holen
+    document.getElementById("ereignisForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const wo = document.getElementById("wo").value;
+      const was = document.getElementById("was").value;
+      const wann = document.getElementById("wann").value;
+      const extras = document.getElementById("extras").value;
+
+      const { error } = await supabase.from("ereignisse").insert([{ wo, was, wann, extras }]);
+
+      if (error) {
+        showNotification("❌ Fehler beim Speichern: " + error.message, "error");
+        return;
+      }
+
+      showNotification("✅ Ereignis erfolgreich gespeichert!", "success");
+      e.target.reset();
+      ladeTabelle();
+    });
+
     ladeTabelle();
   </script>
 
