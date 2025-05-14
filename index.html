@@ -35,6 +35,25 @@
     #event-form {
       display: none;
     }
+
+    #notification {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      display: none;
+    }
+
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
   </style>
 </head>
 <body class="light">
@@ -48,6 +67,8 @@
     <input type="password" id="password" placeholder="Passwort" required><br>
     <button type="submit">Einloggen</button>
   </form>
+
+  <div id="notification"></div>
 
   <div id="event-form">
     <h2>Neues Ereignis</h2>
@@ -78,6 +99,13 @@
       document.body.classList.toggle("light");
     }
 
+    function showNotification(message, type = "success") {
+      const note = document.getElementById("notification");
+      note.innerText = message;
+      note.className = type;
+      note.style.display = "block";
+    }
+
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('email').value;
@@ -86,10 +114,11 @@
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
-        alert("Fehler bei Anmeldung: " + error.message);
+        showNotification("❌ Anmeldung fehlgeschlagen: " + error.message, "error");
         return;
       }
 
+      showNotification("✅ Erfolgreich angemeldet!", "success");
       document.getElementById('event-form').style.display = 'block';
       document.getElementById('login-form').style.display = 'none';
       loadEvents();
@@ -101,7 +130,7 @@
       table.innerHTML = '';
 
       if (error) {
-        alert("Fehler beim Laden: " + error.message);
+        showNotification("❌ Fehler beim Laden: " + error.message, "error");
         return;
       }
 
@@ -124,13 +153,13 @@
 
       const { error } = await supabase.from('ereignisse').insert([{ wo, was, wann, extras }]);
       if (error) {
-        alert("Fehler beim Einfügen: " + error.message);
+        showNotification("❌ Fehler beim Einfügen: " + error.message, "error");
         return;
       }
 
+      showNotification("✅ Ereignis erfolgreich hinzugefügt!", "success");
       loadEvents();
     }
   </script>
 </body>
 </html>
-
