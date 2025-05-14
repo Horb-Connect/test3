@@ -8,22 +8,67 @@
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
+      transition: background-color 0.3s, color 0.3s;
     }
+
+    /* White Mode (Standard) */
+    body.white-mode {
+      background-color: #fff;
+      color: #000;
+    }
+
+    /* Dark Mode */
+    body.dark-mode {
+      background-color: #121212;
+      color: #fff;
+    }
+
     table {
       border-collapse: collapse;
       width: 100%;
       margin-top: 20px;
     }
+
     th, td {
       padding: 10px;
       border: 1px solid #ccc;
     }
+
     th {
       background-color: #f0f0f0;
     }
+
+    /* Dark mode specific styles for table */
+    body.dark-mode table th {
+      background-color: #333;
+      color: #fff;
+    }
+
+    body.dark-mode table td {
+      background-color: #222;
+    }
+
+    /* Toggle Button for Dark/Light Mode */
+    #toggle-button {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+
+    #toggle-button:hover {
+      background-color: #0056b3;
+    }
   </style>
 </head>
-<body>
+<body class="white-mode">
+  <button id="toggle-button">🌙 Dunkelmodus</button>
+
   <h1>Willkommen bei unserem Start-up Horb_Connect</h1>
 
   <!-- Logo -->
@@ -79,6 +124,22 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwdGZsaGx6c2J2cGJmdm1mbGphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyMjEyODgsImV4cCI6MjA2Mjc5NzI4OH0.37ryrRnE0fycdVjXiDRml1VM3GGEiJj4a_oH6i3sPUM';
 
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Toggle zwischen Dark Mode und White Mode
+    document.getElementById('toggle-button').addEventListener('click', () => {
+      const body = document.body;
+      const currentMode = body.classList.contains('dark-mode') ? 'dark' : 'light';
+
+      if (currentMode === 'dark') {
+        body.classList.remove('dark-mode');
+        body.classList.add('white-mode');
+        document.getElementById('toggle-button').textContent = '🌙 Dunkelmodus';
+      } else {
+        body.classList.remove('white-mode');
+        body.classList.add('dark-mode');
+        document.getElementById('toggle-button').textContent = '🌞 Hellenmodus';
+      }
+    });
 
     // Anmeldung
     async function anmelden(event) {
@@ -181,3 +242,4 @@
 
 </body>
 </html>
+
